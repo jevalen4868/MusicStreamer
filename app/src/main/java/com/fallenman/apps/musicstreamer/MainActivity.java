@@ -1,9 +1,11 @@
-package com.fallenman.apps.spotifystreamer;
+package com.fallenman.apps.musicstreamer;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.fallenman.apps.musicstreamer.R;
 
 
 public class MainActivity extends ActionBarActivity {

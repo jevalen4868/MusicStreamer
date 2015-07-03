@@ -1,4 +1,4 @@
-package com.fallenman.apps.spotifystreamer;
+package com.fallenman.apps.musicstreamer;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
