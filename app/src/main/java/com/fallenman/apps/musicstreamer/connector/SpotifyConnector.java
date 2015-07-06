@@ -1,19 +1,12 @@
 package com.fallenman.apps.musicstreamer.connector;
 
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import com.squareup.picasso.Picasso;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
-import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Pager;
 
 /**
@@ -26,8 +19,8 @@ public class SpotifyConnector implements MusicConnector {
      * @return list VO of all the artists and their corresponding images..
      */
     @Override
-    public List<MusicVO> getMusicVoList(String entityName) {
-        List<MusicVO> mVoList = new ArrayList<MusicVO>(10);
+    public List<MusicVo> getMusicVoList(String entityName) {
+        List<MusicVo> mVoList = new ArrayList<MusicVo>(10);
         // Utilize the spotify api for data retrieval.
         SpotifyApi api = new SpotifyApi();
         SpotifyService svc = api.getService();
@@ -35,9 +28,12 @@ public class SpotifyConnector implements MusicConnector {
         Pager<Artist> pager = ap.artists;
         for(Artist artist : pager.items) {
             // Start adding items to our musicVO
-            MusicVO mVo = new MusicVO();
+            MusicVo mVo = new MusicVo();
             mVo.setEntityName(artist.name);
-            mVo.setEntityImageUrl(artist.images.get(0).url);
+            // It seems that not every artist has an image.
+            if( ! artist.images.isEmpty()) {
+                mVo.setEntityImageUrl(artist.images.get(0).url);
+            }
             mVoList.add(mVo);
         }
         // That was easy ;)

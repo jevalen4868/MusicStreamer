@@ -12,5 +12,5 @@ public interface MusicConnector {
      * @param query
      * @return list of musicVo to display in main activity.
      */
-    public List<MusicVO> getMusicVoList(String query);
+    public List<MusicVo> getMusicVoList(String query);
 }
