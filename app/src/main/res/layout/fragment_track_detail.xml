@@ -4,24 +4,25 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.fallenman.apps.musicstreamer.EntityDetailActivityFragment">
+    tools:context="com.fallenman.apps.musicstreamer.TrackDetailActivityFragment">
 
     <ImageView
         android:layout_margin="25dp"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:minHeight="?android:attr/listPreferredItemHeight"
-        android:id="@+id/imageView_detailEntityImage"
+        android:id="@+id/imageView_detailAlbumImage"
         />
+
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
         android:minHeight="?android:attr/listPreferredItemHeight"
-        android:id="@+id/textView_detailEntityName"
-        android:layout_alignBottom="@+id/imageView_entityImage"
-        android:layout_toRightOf="@+id/imageView_entityImage"
-        android:layout_toEndOf="@+id/imageView_entityImage"
-        android:layout_alignTop="@+id/imageView_entityImage" />
+        android:id="@+id/textView_detailTrackData"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center_vertical"
+        android:layout_toRightOf="@+id/imageView_albumImage"
+        android:layout_toEndOf="@+id/imageView_albumImage"
+        android:layout_alignBottom="@+id/imageView_albumImage"
+        android:layout_alignTop="@+id/imageView_albumImage" />
 
 </RelativeLayout>

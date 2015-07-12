@@ -19,6 +19,14 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".TopTracksActivity"
+            android:label="@string/title_activity_top_tracks"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.fallenman.apps.musicstreamer.MainActivity" />
+        </activity>
+        <activity
             android:name=".EntityDetailActivity"
             android:label="@string/title_activity_entity_detail"
             android:parentActivityName=".MainActivity" >
@@ -27,12 +35,12 @@
                 android:value="com.fallenman.apps.musicstreamer.MainActivity" />
         </activity>
         <activity
-            android:name=".TopTracksActivity"
-            android:label="@string/title_activity_top_tracks"
-            android:parentActivityName=".MainActivity" >
+            android:name=".TrackDetailActivity"
+            android:label="@string/title_activity_track_detail"
+            android:parentActivityName=".TopTracksActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.fallenman.apps.musicstreamer.MainActivity" />
+                android:value="com.fallenman.apps.musicstreamer.TopTracksActivity" />
         </activity>
     </application>
 

@@ -34,8 +34,7 @@ public class TrackAdapter extends ArrayAdapter<TrackVo> {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             rowView = inflater.inflate(R.layout.track_layout, parent, false);
             // Construct view holder to save on valuable processor cycles!
-            tvh.trackName = (TextView) rowView.findViewById(R.id.textView_trackName);
-            //tvh.albumName = (TextView) rowView.findViewById(R.id.textView_trackAlbum);
+            tvh.trackData = (TextView) rowView.findViewById(R.id.textView_trackData);
             tvh.albumImage = (ImageView) rowView.findViewById(R.id.imageView_albumImage);
             rowView.setTag(tvh);
         } else // our data is cached!
@@ -45,8 +44,8 @@ public class TrackAdapter extends ArrayAdapter<TrackVo> {
         // Set data to our views!
         TrackVo tVo = getItem(position);
         if (tVo != null) {
-            tvh.trackName.setText(tVo.getTrackName() + "\n" + tVo.getAlbumName());
-            //tvh.albumName.setText(tVo.getAlbumName());
+            tvh.trackData.setText(tVo.getTrackName() + "\n" + tVo.getAlbumName());
+            tvh.previewUrl = tVo.getPreviewUrl();
             // Now attempt to fetch the image via Picasso.
             String imageUrl = tVo.getImageUrl();
             Picasso.with(getContext())
@@ -58,9 +57,8 @@ public class TrackAdapter extends ArrayAdapter<TrackVo> {
     }
 
     protected static class TrackViewHolder {
-        String trackId;
-        TextView trackName;
-        TextView albumName;
+        String previewUrl;
+        TextView trackData;
         ImageView albumImage;
     }
 }

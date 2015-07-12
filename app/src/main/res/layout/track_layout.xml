@@ -13,17 +13,9 @@
 
     <TextView
         android:minHeight="?android:attr/listPreferredItemHeight"
-        android:id="@+id/textView_trackName"
+        android:id="@+id/textView_trackData"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:gravity="center_vertical"
-        android:text="Hello Track name."/>
-
-    <!--TextView
-        android:minHeight="?android:attr/listPreferredItemHeight"
-        android:id="@+id/textView_trackAlbum"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Hello Album name"/-->
+        android:gravity="center_vertical" />
 
 </LinearLayout>
