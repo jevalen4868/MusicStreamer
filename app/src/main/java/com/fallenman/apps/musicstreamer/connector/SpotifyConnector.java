@@ -1,42 +1,116 @@
 package com.fallenman.apps.musicstreamer.connector;
 
+import com.fallenman.apps.musicstreamer.vo.EntityVo;
+import com.fallenman.apps.musicstreamer.vo.TrackVo;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Pager;
+import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.Tracks;
 
 /**
  * Created by jeremyvalenzuela on 7/3/15.
  * The spotify api works via http / restful services requests.
  */
 public class SpotifyConnector implements MusicConnector {
+    private static SpotifyApi api;
+    private static SpotifyService svc;
+    /**
+     * lazy initialization of service.
+     */
+    private static void initializeService() {
+        if(svc == null) {
+            synchronized (SpotifyConnector.class) {
+                if (svc == null) {
+                    api = new SpotifyApi();
+                    svc = api.getService();
+                }
+            }
+        }
+    }
+
+    public SpotifyConnector() {
+        initializeService();
+    }
+
     /**
      * @param entityName - Entity name
-     * @return list VO of all the artists and their corresponding images..
+     * @return list VO of all the artists, ids and their images.
      */
     @Override
-    public List<MusicVo> getMusicVoList(String entityName) {
-        List<MusicVo> mVoList = new ArrayList<MusicVo>(10);
+    public List<EntityVo> getEntityVoList(String entityName) {
+        List<EntityVo> eVoList = new ArrayList<EntityVo>(10);
         // Utilize the spotify api for data retrieval.
-        SpotifyApi api = new SpotifyApi();
-        SpotifyService svc = api.getService();
         ArtistsPager ap = svc.searchArtists(entityName);
         Pager<Artist> pager = ap.artists;
         for(Artist artist : pager.items) {
             // Start adding items to our musicVO
-            MusicVo mVo = new MusicVo();
-            mVo.setEntityName(artist.name);
+            EntityVo eVo = new EntityVo();
+            eVo.setEntityName(artist.name);
+            eVo.setId(artist.id);
             // It seems that not every artist has an image.
-            if( ! artist.images.isEmpty()) {
-                mVo.setEntityImageUrl(artist.images.get(0).url);
+            if( ! artist.images.isEmpty() ) {
+                for (Image image : artist.images) {
+                    if (image.height == 300) {
+                        eVo.setEntityImageUrl(image.url);
+                    }
+                }
+                // If no image matched, just set to the first image.
+                if(eVo.getEntityImageUrl() == null) {
+                    eVo.setEntityImageUrl(artist.images.get(0).url);
+                }
             }
-            mVoList.add(mVo);
+            eVoList.add(eVo);
         }
         // That was easy ;)
-        return mVoList;
+        return eVoList;
+    }
+
+    /**
+     * Return track Vo containing track data.
+     * @param query
+     * @return artists top tracks
+     */
+    @Override
+    public List<TrackVo> getTopTrackVoList(String query) {
+        List<TrackVo> tVoList = new ArrayList<TrackVo>(10);
+        // Query by country code for US by default.
+        Map queryParams = new HashMap<String, String>();
+        queryParams.put("country", "US");
+        // Utilize spotify api again!
+        Tracks tracks = svc.getArtistTopTrack(query, queryParams);
+        for (Track t : tracks.tracks) {
+            TrackVo tVo = new TrackVo();
+            tVo.setAlbumName(t.album.name);
+            tVo.setPreviewUrl(t.preview_url);
+            tVo.setTrackName(t.name);
+            // Image attr setting.
+            List<Image> albumImages = t.album.images;
+            if( ! albumImages.isEmpty()) {
+                // Let's check if the size is 640px, if so, that's what we want for our album art.
+                for ( Image albumImage : albumImages ) {
+                    // 300 for thumbnails
+                    if ( albumImage.width == 300) {
+                        tVo.setImageUrl(albumImage.url);
+                    }
+                }
+                // If we don't have a match, just set both to the first image.
+                if(tVo.getImageUrl() == null) {
+                    tVo.setImageUrl(albumImages.get(0).url);
+                }
+            }
+            // Finally, add to list of tVos!
+            tVoList.add(tVo);
+        }
+        return tVoList;
     }
 }

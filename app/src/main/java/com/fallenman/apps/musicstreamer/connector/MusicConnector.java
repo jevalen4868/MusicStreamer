@@ -1,5 +1,8 @@
 package com.fallenman.apps.musicstreamer.connector;
 
+import com.fallenman.apps.musicstreamer.vo.EntityVo;
+import com.fallenman.apps.musicstreamer.vo.TrackVo;
+
 import java.util.List;
 
 /**
@@ -12,5 +15,13 @@ public interface MusicConnector {
      * @param query
      * @return list of musicVo to display in main activity.
      */
-    public List<MusicVo> getMusicVoList(String query);
+    public List<EntityVo> getEntityVoList(String query);
+
+    /**
+     * Process for getting list of tracks for entity.
+     * @param query
+     * @return list of tracks based on param.
+     */
+    public List<TrackVo> getTopTrackVoList(String query);
+
 }

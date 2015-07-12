@@ -2,29 +2,23 @@ package com.fallenman.apps.musicstreamer;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.SearchView;
+import android.widget.Toast;
 
+import com.fallenman.apps.musicstreamer.adapter.MusicAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
-import com.fallenman.apps.musicstreamer.connector.MusicVo;
+import com.fallenman.apps.musicstreamer.vo.EntityVo;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
-import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +28,7 @@ import java.util.List;
  */
 public class MainActivityFragment extends Fragment {
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
-    private EditText entityName;
+    private SearchView searchEntityName;
     private MusicAdapter musicAdapter;
     public MainActivityFragment() {
     }
@@ -44,10 +38,11 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         // Instantiate the music adapter, this will do our magic!
-        musicAdapter = new MusicAdapter(getActivity(), R.layout.layout_main, new ArrayList<MusicVo>(10));
+        musicAdapter = new MusicAdapter(getActivity(), R.layout.layout_main, new ArrayList<EntityVo>(10));
         // Get the forecast list view to set forecast array adapter on.
         ListView forecastListView = (ListView)rootView.findViewById(R.id.listView_entityData);
         forecastListView.setAdapter(musicAdapter);
+        forecastListView.setOnItemClickListener( new EntityDataOnClickListener() );
         return rootView;
     }
 
@@ -55,35 +50,51 @@ public class MainActivityFragment extends Fragment {
     public void onStart() {
         // Instead of using anonymous inner class, I prefer to define it.
         // Retrieve text from view upon enter.
-        ArtistNameListener anl = new ArtistNameListener();
-        entityName = (EditText) getActivity().findViewById(R.id.editText_artist);
-        entityName.setOnEditorActionListener(anl);
+        searchEntityName = (SearchView) getActivity().findViewById(R.id.searchText_entity);
+        searchEntityName.setOnQueryTextListener(new EntityNameListener());
+        searchEntityName.setIconified(false);
         super.onStart();
     }
 
     // PLEASE DEFINE SUB CLASSES BELOW THIS COMMENT.////////////////////////////////////////////////
 
-    public class ArtistNameListener implements TextView.OnEditorActionListener
-    {
+    public class EntityDataOnClickListener implements ListView.OnItemClickListener {
         @Override
-        public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+        public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id) {
+            EntityVo eVo = musicAdapter.getItem(pos);
+            // Executed in an Activity, so 'getActivity' is the Context
+            Intent detailIntent = new Intent(getActivity(), TopTracksActivity.class);
+            // Stick some "extra text" on it. The id of the artist.
+            detailIntent.putExtra(Intent.EXTRA_TEXT, eVo.getId());
+            // Start the intent.
+            getActivity().startActivity(detailIntent);
+        }
+    }
+    public class EntityNameListener implements SearchView.OnQueryTextListener {
+        @Override
+        public boolean onQueryTextSubmit(String query) {
             // Use input method manager to close the keyboard on enter.
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(
-                    entityName.getApplicationWindowToken(),
+                    searchEntityName.getApplicationWindowToken(),
                     InputMethodManager.HIDE_NOT_ALWAYS);
             // Now request data from MusicConnector.
-            CharSequence entityQueryName = textView.getText();
+            CharSequence entityQueryName = query;
             FetchEntityDataTask fedt = new FetchEntityDataTask();
             fedt.execute(entityQueryName.toString());
-            return true;
+            return false;
+        }
+
+        @Override
+        public boolean onQueryTextChange(String s) {
+            return false;
         }
     }
 
-    public class FetchEntityDataTask extends AsyncTask<String, Void, List<MusicVo>> {
+    public class FetchEntityDataTask extends AsyncTask<String, Void, List<EntityVo>> {
 
         @Override
-        protected List<MusicVo> doInBackground(String... params) {
+        protected List<EntityVo> doInBackground(String... params) {
             if(params == null || params.length == 0) {
                 // Nothing to do, exit.
                 return null;
@@ -95,24 +106,21 @@ public class MainActivityFragment extends Fragment {
             }
             String entityQueryName = params[0];
             MusicConnector connector = MusicFactory.getConnector();
-            List<MusicVo> musicVoList = connector.getMusicVoList(entityQueryName.toString());
-            // Now attempt to fetch the image via Picasso.
-            for(MusicVo mVo : musicVoList) {
-                try {
-                    mVo.setEntityImage(Picasso.with(getActivity()).load(mVo.getEntityImageUrl()).get());
-                } catch (IOException ioe) {
-                    Log.e(LOG_TAG, "ERROR=", ioe);
-                }
-            }
-            return musicVoList;
+            List<EntityVo> entityVoList = connector.getEntityVoList(entityQueryName.toString());
+            return entityVoList;
         }
 
         @Override
-        protected void onPostExecute(List<MusicVo> musicVoList) {
-            super.onPostExecute(musicVoList);
+        protected void onPostExecute(List<EntityVo> entityVoList) {
+            super.onPostExecute(entityVoList);
             musicAdapter.clear();
-            for(MusicVo mVo : musicVoList) {
+            for(EntityVo mVo : entityVoList) {
                 musicAdapter.add(mVo);
+            }
+            // Display toast if no data returned.
+            if(entityVoList.isEmpty()) {
+                Toast noDataToast = Toast.makeText(getActivity(), "No data found!" , Toast.LENGTH_SHORT);
+                noDataToast.show();
             }
         }
     }

@@ -22,12 +22,13 @@ public class MusicFactory {
      * @return
      */
     public static MusicConnector getConnector() {
-        if(defaultConnector == null)
+        if(defaultConnector == null) {
             synchronized (MusicConnector.class) {
-                if(defaultConnector == null) {
+                if (defaultConnector == null) {
                     defaultConnector = getDefaultConnector();
                 }
             }
+        }
         return defaultConnector;
     }
 }
