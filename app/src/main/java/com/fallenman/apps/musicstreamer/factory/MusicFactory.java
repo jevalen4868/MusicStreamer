@@ -7,7 +7,7 @@ import com.fallenman.apps.musicstreamer.connector.SpotifyConnector;
  * Created by jeremyvalenzuela on 7/3/15.
  */
 public class MusicFactory {
-    private static MusicConnector defaultConnector;
+    private MusicConnector defaultConnector;
 
     /**
      * For now, the default connector is Spotify.
@@ -21,7 +21,7 @@ public class MusicFactory {
      * lazy initialization of connector.
      * @return
      */
-    public static MusicConnector getConnector() {
+    public MusicConnector getConnector() {
         if(defaultConnector == null) {
             synchronized (MusicConnector.class) {
                 if (defaultConnector == null) {

@@ -105,7 +105,8 @@ public class MainActivityFragment extends Fragment {
                 return null;
             }
             String entityQueryName = params[0];
-            MusicConnector connector = MusicFactory.getConnector();
+            MusicFactory mf = new MusicFactory();
+            MusicConnector connector = mf.getConnector();
             List<EntityVo> entityVoList = connector.getEntityVoList(entityQueryName.toString());
             return entityVoList;
         }
@@ -114,13 +115,16 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(List<EntityVo> entityVoList) {
             super.onPostExecute(entityVoList);
             musicAdapter.clear();
-            for(EntityVo mVo : entityVoList) {
-                musicAdapter.add(mVo);
-            }
             // Display toast if no data returned.
-            if(entityVoList.isEmpty()) {
+            if(entityVoList == null || entityVoList.isEmpty()) {
                 Toast noDataToast = Toast.makeText(getActivity(), "No data found!" , Toast.LENGTH_SHORT);
                 noDataToast.show();
+            }
+            else // we have data!
+            {
+                for (EntityVo mVo : entityVoList) {
+                    musicAdapter.add(mVo);
+                }
             }
         }
     }

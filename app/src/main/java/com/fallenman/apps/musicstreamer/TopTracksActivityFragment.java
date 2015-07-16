@@ -77,7 +77,8 @@ public class TopTracksActivityFragment extends Fragment {
             String entityId = params[0];
             // Our entityId should be set, let's retrieve the artists top tracks
             // Let's utilize our fancy MusicConnector.
-            MusicConnector mc = MusicFactory.getConnector();
+            MusicFactory mf = new MusicFactory();
+            MusicConnector mc = mf.getConnector();
             List<TrackVo> tVoList = mc.getTopTrackVoList(entityId);
             // Badabing! We should be able to just set this to trackAdapter.
             return tVoList;
@@ -87,13 +88,13 @@ public class TopTracksActivityFragment extends Fragment {
         protected void onPostExecute(List<TrackVo> trackVoList) {
             super.onPostExecute(trackVoList);
             trackAdapter.clear();
-            if ( ! trackVoList.isEmpty()) {
-                trackAdapter.addAll(trackVoList);
-            }
-            // Display toast if no data returned.
-            if(trackVoList.isEmpty()) {
-                Toast noDataToast = Toast.makeText(getActivity(), "No data found!" , Toast.LENGTH_SHORT);
+            if ( trackVoList == null || trackVoList.isEmpty()) {
+                Toast noDataToast = Toast.makeText(getActivity(), "No data found!", Toast.LENGTH_SHORT);
                 noDataToast.show();
+            }
+            else // Add all tracks to adapter.
+            {
+                trackAdapter.addAll(trackVoList);
             }
         }
     }

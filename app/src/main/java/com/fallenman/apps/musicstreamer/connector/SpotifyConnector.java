@@ -1,5 +1,7 @@
 package com.fallenman.apps.musicstreamer.connector;
 
+import android.util.Log;
+
 import com.fallenman.apps.musicstreamer.vo.EntityVo;
 import com.fallenman.apps.musicstreamer.vo.TrackVo;
 
@@ -16,30 +18,21 @@ import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Pager;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import retrofit.RetrofitError;
 
 /**
  * Created by jeremyvalenzuela on 7/3/15.
  * The spotify api works via http / restful services requests.
  */
 public class SpotifyConnector implements MusicConnector {
-    private static SpotifyApi api;
-    private static SpotifyService svc;
-    /**
-     * lazy initialization of service.
-     */
-    private static void initializeService() {
-        if(svc == null) {
-            synchronized (SpotifyConnector.class) {
-                if (svc == null) {
-                    api = new SpotifyApi();
-                    svc = api.getService();
-                }
-            }
-        }
-    }
+    private static final String LOG_TAG = SpotifyConnector.class.getSimpleName();
+
+    private SpotifyApi api;
+    private SpotifyService svc;
 
     public SpotifyConnector() {
-        initializeService();
+        api = new SpotifyApi();
+        svc = api.getService();
     }
 
     /**
@@ -49,8 +42,15 @@ public class SpotifyConnector implements MusicConnector {
     @Override
     public List<EntityVo> getEntityVoList(String entityName) {
         List<EntityVo> eVoList = new ArrayList<EntityVo>(10);
-        // Utilize the spotify api for data retrieval.
-        ArtistsPager ap = svc.searchArtists(entityName);
+        ArtistsPager ap = null;
+        try {
+            // Utilize the spotify api for data retrieval.
+            ap = svc.searchArtists(entityName);
+        }
+        catch( RetrofitError ex ) {
+            Log.e(LOG_TAG, "ERROR", ex);
+            return null;
+        }
         Pager<Artist> pager = ap.artists;
         for(Artist artist : pager.items) {
             // Start adding items to our musicVO
@@ -87,7 +87,15 @@ public class SpotifyConnector implements MusicConnector {
         Map queryParams = new HashMap<String, String>();
         queryParams.put("country", "US");
         // Utilize spotify api again!
-        Tracks tracks = svc.getArtistTopTrack(query, queryParams);
+        Tracks tracks = null;
+        try {
+            tracks = svc.getArtistTopTrack(query, queryParams);
+        }
+        catch( RetrofitError ex ) {
+            Log.e(LOG_TAG, "ERROR", ex);
+            // No net connection, return null;
+            return null;
+        }
         for (Track t : tracks.tracks) {
             TrackVo tVo = new TrackVo();
             tVo.setAlbumName(t.album.name);
