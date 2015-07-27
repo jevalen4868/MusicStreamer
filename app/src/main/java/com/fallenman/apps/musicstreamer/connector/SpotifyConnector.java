@@ -64,9 +64,9 @@ public class SpotifyConnector implements MusicConnector {
                         eVo.setEntityImageUrl(image.url);
                     }
                 }
-                // If no image matched, just set to the first image.
+                // If no image matched, just set to the last image, per the api it should be the smallest.
                 if(eVo.getEntityImageUrl() == null) {
-                    eVo.setEntityImageUrl(artist.images.get(0).url);
+                    eVo.setEntityImageUrl(artist.images.get(artist.images.size() - 1).url);
                 }
             }
             eVoList.add(eVo);

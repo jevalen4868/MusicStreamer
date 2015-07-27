@@ -2,6 +2,8 @@ package com.fallenman.apps.musicstreamer;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ import android.widget.Toast;
 
 import com.fallenman.apps.musicstreamer.adapter.MusicAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
+import com.fallenman.apps.musicstreamer.utils.Display;
+import com.fallenman.apps.musicstreamer.utils.Network;
 import com.fallenman.apps.musicstreamer.vo.EntityVo;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
 
@@ -42,7 +46,7 @@ public class MainActivityFragment extends Fragment {
         // Get the forecast list view to set forecast array adapter on.
         ListView forecastListView = (ListView)rootView.findViewById(R.id.listView_entityData);
         forecastListView.setAdapter(musicAdapter);
-        forecastListView.setOnItemClickListener( new EntityDataOnClickListener() );
+        forecastListView.setOnItemClickListener(new EntityDataOnClickListener());
         return rootView;
     }
 
@@ -73,6 +77,11 @@ public class MainActivityFragment extends Fragment {
     public class EntityNameListener implements SearchView.OnQueryTextListener {
         @Override
         public boolean onQueryTextSubmit(String query) {
+            // Don't do anything if there's no network.
+            if( ! Network.isNetworkAvailable(getActivity())) {
+                Display.shortToast(getActivity(), "No network available!");
+                return false;
+            }
             // Use input method manager to close the keyboard on enter.
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(
@@ -92,7 +101,6 @@ public class MainActivityFragment extends Fragment {
     }
 
     public class FetchEntityDataTask extends AsyncTask<String, Void, List<EntityVo>> {
-
         @Override
         protected List<EntityVo> doInBackground(String... params) {
             if(params == null || params.length == 0) {
@@ -117,8 +125,7 @@ public class MainActivityFragment extends Fragment {
             musicAdapter.clear();
             // Display toast if no data returned.
             if(entityVoList == null || entityVoList.isEmpty()) {
-                Toast noDataToast = Toast.makeText(getActivity(), "No data found!" , Toast.LENGTH_SHORT);
-                noDataToast.show();
+                Display.shortToast(getActivity(), "No data found!");
             }
             else // we have data!
             {
