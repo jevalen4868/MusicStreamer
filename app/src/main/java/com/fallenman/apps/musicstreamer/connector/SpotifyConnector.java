@@ -113,7 +113,7 @@ public class SpotifyConnector implements MusicConnector {
                 }
                 // If we don't have a match, just set both to the first image.
                 if(tVo.getImageUrl() == null) {
-                    tVo.setImageUrl(albumImages.get(0).url);
+                    tVo.setImageUrl(albumImages.get(albumImages.size() - 1).url);
                 }
             }
             // Finally, add to list of tVos!
