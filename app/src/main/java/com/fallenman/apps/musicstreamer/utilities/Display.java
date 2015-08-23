@@ -1,4 +1,4 @@
-package com.fallenman.apps.musicstreamer.utils;
+package com.fallenman.apps.musicstreamer.utilities;
 
 import android.content.Context;
 import android.widget.Toast;

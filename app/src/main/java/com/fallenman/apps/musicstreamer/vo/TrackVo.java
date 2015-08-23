@@ -4,11 +4,20 @@ package com.fallenman.apps.musicstreamer.vo;
  * Created by jeremyvalenzuela on 7/7/15.
  */
 public class TrackVo {
+
+    private String entityNames;
     private String trackName;
     private String albumName;
     private String imageUrl;
     private String previewUrl;
 
+    public String getEntityNames() {
+        return entityNames;
+    }
+
+    public void setEntityNames(String entityNames) {
+        this.entityNames = entityNames;
+    }
     public String getTrackName() {
         return trackName;
     }

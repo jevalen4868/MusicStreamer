@@ -2,8 +2,6 @@ package com.fallenman.apps.musicstreamer;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -14,12 +12,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import com.fallenman.apps.musicstreamer.adapter.MusicAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
-import com.fallenman.apps.musicstreamer.utils.Display;
-import com.fallenman.apps.musicstreamer.utils.Network;
+import com.fallenman.apps.musicstreamer.utilities.Display;
+import com.fallenman.apps.musicstreamer.utilities.Network;
 import com.fallenman.apps.musicstreamer.vo.EntityVo;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
 

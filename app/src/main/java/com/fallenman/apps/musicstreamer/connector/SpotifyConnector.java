@@ -1,5 +1,6 @@
 package com.fallenman.apps.musicstreamer.connector;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.fallenman.apps.musicstreamer.vo.EntityVo;
@@ -13,6 +14,7 @@ import java.util.Map;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Pager;
@@ -98,6 +100,13 @@ public class SpotifyConnector implements MusicConnector {
         }
         for (Track t : tracks.tracks) {
             TrackVo tVo = new TrackVo();
+            // Let's get all the entities into one field.
+            List<String> entityNameList = new ArrayList<>();
+            for(ArtistSimple a : t.artists) {
+                entityNameList.add(a.name);
+            }
+            String entityNames = TextUtils.join(", ", entityNameList);
+            tVo.setEntityNames(entityNames);
             tVo.setAlbumName(t.album.name);
             tVo.setPreviewUrl(t.preview_url);
             tVo.setTrackName(t.name);
