@@ -44,9 +44,8 @@ public class TrackAdapter extends ArrayAdapter<TrackVo> {
         // Set data to our views!
         TrackVo tVo = getItem(position);
         if (tVo != null) {
-            tvh.entityNames = tVo.getEntityNames();
+            // Now populate the view.
             tvh.trackData.setText(tVo.getTrackName() + "\n" + tVo.getAlbumName());
-            tvh.previewUrl = tVo.getPreviewUrl();
             // Now attempt to fetch the image via Picasso.
             String imageUrl = tVo.getImageUrl();
             Picasso.with(getContext())
@@ -58,8 +57,6 @@ public class TrackAdapter extends ArrayAdapter<TrackVo> {
     }
 
     protected static class TrackViewHolder {
-        String entityNames;
-        String previewUrl;
         TextView trackData;
         ImageView albumImage;
     }

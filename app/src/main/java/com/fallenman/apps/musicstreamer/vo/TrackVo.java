@@ -10,6 +10,7 @@ public class TrackVo {
     private String albumName;
     private String imageUrl;
     private String previewUrl;
+    private long duration;
 
     public String getEntityNames() {
         return entityNames;
@@ -18,6 +19,7 @@ public class TrackVo {
     public void setEntityNames(String entityNames) {
         this.entityNames = entityNames;
     }
+
     public String getTrackName() {
         return trackName;
     }
@@ -48,5 +50,13 @@ public class TrackVo {
 
     public void setPreviewUrl(String previewUrl) {
         this.previewUrl = previewUrl;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 }

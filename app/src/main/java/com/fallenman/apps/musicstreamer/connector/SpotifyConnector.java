@@ -110,6 +110,7 @@ public class SpotifyConnector implements MusicConnector {
             tVo.setAlbumName(t.album.name);
             tVo.setPreviewUrl(t.preview_url);
             tVo.setTrackName(t.name);
+            tVo.setDuration(t.duration_ms);
             // Image attr setting.
             List<Image> albumImages = t.album.images;
             if( ! albumImages.isEmpty()) {
