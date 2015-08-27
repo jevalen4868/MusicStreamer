@@ -7,7 +7,7 @@ import android.net.NetworkInfo;
 /**
  * Created by jeremyvalenzuela on 7/27/15.
  */
-public class Network {
+public class NetworkFunctions {
     /**
      * Simple helper function for checking network status.
      * @param context

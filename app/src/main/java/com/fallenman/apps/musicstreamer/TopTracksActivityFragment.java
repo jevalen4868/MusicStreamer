@@ -16,8 +16,8 @@ import com.fallenman.apps.musicstreamer.adapter.TrackAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
 import com.fallenman.apps.musicstreamer.constants.PlayerJson;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
-import com.fallenman.apps.musicstreamer.utilities.Display;
-import com.fallenman.apps.musicstreamer.utilities.Network;
+import com.fallenman.apps.musicstreamer.utilities.DisplayFunctions;
+import com.fallenman.apps.musicstreamer.utilities.NetworkFunctions;
 import com.fallenman.apps.musicstreamer.vo.TrackVo;
 
 import org.json.JSONArray;
@@ -82,8 +82,8 @@ public class TopTracksActivityFragment extends Fragment {
                 return null;
             }
             // Don't do anything if there's no network.
-            if( ! Network.isNetworkAvailable(getActivity())) {
-                Display.shortToast(getActivity(), "No network available!");
+            if( ! NetworkFunctions.isNetworkAvailable(getActivity())) {
+                DisplayFunctions.shortToast(getActivity(), "No network available!");
                 return null;
             }
             String entityId = params[0];

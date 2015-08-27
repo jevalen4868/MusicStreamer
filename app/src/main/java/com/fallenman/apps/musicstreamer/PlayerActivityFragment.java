@@ -1,6 +1,5 @@
 package com.fallenman.apps.musicstreamer;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -11,13 +10,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.fallenman.apps.musicstreamer.constants.PlayerJson;
-import com.fallenman.apps.musicstreamer.utilities.Display;
-import com.fallenman.apps.musicstreamer.utilities.Network;
+import com.fallenman.apps.musicstreamer.utilities.CompatibilityImageFunctions;
+import com.fallenman.apps.musicstreamer.utilities.DisplayFunctions;
+import com.fallenman.apps.musicstreamer.utilities.NetworkFunctions;
 import com.fallenman.apps.musicstreamer.vo.TrackVo;
 import com.squareup.picasso.Picasso;
 
@@ -31,21 +31,23 @@ import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
+ * Some snippets from
+ * http://stackoverflow.com/questions/22438861/showing-error-while-trying-to-run-mediaplayer-in-asynctask
  */
-public class PlayerActivityFragment extends Fragment {
+public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPreparedListener {
     private static final String LOG_TAG = PlayerActivityFragment.class.getSimpleName();
+    private MediaPlayer mMediaPlayer;
     // All variables regarding current track playing.
+    private ScrollView mScrollView;
     private String mEntityId;
     private TextView mEntityNames;
     private TextView mTrackName;
     private TextView mAlbumName;
-    private ImageView mAlbumArt;
+    private ResizableImageView mAlbumArt;
     private SeekBar mSeekBar;
     private ImageButton mPlayPauseTrack;
     private ImageButton mNextTrack;
     private ImageButton mPreviousTrack;
-    private static MediaPlayer mMediaPlayer = new MediaPlayer();
-
     // A list which contains all the mTracks pass in.
     private List<TrackVo> mTracks = new ArrayList<TrackVo>();
 
@@ -75,6 +77,19 @@ public class PlayerActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_player, container, false);
+
+        mScrollView = (ScrollView) rootView.findViewById(R.id.player_fragment_scrollView);
+        // Now do all the background noise...
+        mEntityNames = (TextView) rootView.findViewById(R.id.entity_names_textView);
+        mAlbumName = (TextView) rootView.findViewById(R.id.album_name_textView);
+        mAlbumArt = (ResizableImageView) rootView.findViewById(R.id.album_art_imageView);
+        mTrackName = (TextView) rootView.findViewById(R.id.track_name_textView);
+        mSeekBar = (SeekBar) rootView.findViewById(R.id.player_seek_bar);
+        mPreviousTrack = (ImageButton) rootView.findViewById(R.id.previous_imageButton);
+        mPlayPauseTrack = (ImageButton) rootView.findViewById(R.id.play_pause_imageButton);
+        mPlayPauseTrack.setImageResource(android.R.drawable.ic_media_pause);
+        mNextTrack = (ImageButton) rootView.findViewById(R.id.next_imageButton);
+
         // Grab calling intent, so we can take it's data! Muahahaha!
         Intent intent = getActivity().getIntent();
         // check if intent has the data we are expecting.
@@ -82,27 +97,90 @@ public class PlayerActivityFragment extends Fragment {
             String playerJsonStr = intent.getStringExtra(Intent.EXTRA_TEXT);
             Log.v(LOG_TAG, playerJsonStr);
             setTracks(playerJsonStr);
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         }
         return rootView;
     }
 
     @Override
     public void onStart() {
-        // Now do all the background noise...
-        Activity act = getActivity();
-        mEntityNames = (TextView) act.findViewById(R.id.entity_names_textView);
-        mAlbumName = (TextView) act.findViewById(R.id.album_name_textView);
-        mAlbumArt = (ImageView) act.findViewById(R.id.album_art_imageView);
-        mTrackName = (TextView) act.findViewById(R.id.track_name_textView);
-        mSeekBar = (SeekBar) act.findViewById(R.id.player_seek_bar);
-        mPreviousTrack = (ImageButton) act.findViewById(R.id.previous_imageButton);
-        mPlayPauseTrack = (ImageButton) act.findViewById(R.id.play_pause_imageButton);
-        mNextTrack = (ImageButton) act.findViewById(R.id.next_imageButton);
+        super.onStart();
+        // Let's setup listeners for our play,pause,next,previous buttons.
+        mPlayPauseTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mMediaPlayer.isPlaying()) {
+                    mPlayPauseTrack.setImageDrawable(null);
+                    mPlayPauseTrack.setImageDrawable(
+                            CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_play, getResources())
+                    );
+                    mMediaPlayer.pause();
+                }
+                else {
+                    mPlayPauseTrack.setImageDrawable(
+                            CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources())
+                    );
+                    mMediaPlayer.start();
+                }
+            }
+        });
+        mNextTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Make sure we are not at the last track in the list.
+                if(mCurrentTrackPosition == (mTracks.size() - 1)) {
+                    DisplayFunctions.shortToast(getActivity(), "You are at the last track.");
+                    return;
+                }
+                mCurrentTrackPosition++;
+                mCurrentTrack = mTracks.get(mCurrentTrackPosition);
+                setViewToCurrentTrack();
+                playCurrentTrack();
+            }
+        });
+        mPreviousTrack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Make sure we are not at the last track in the list.
+                if(mCurrentTrackPosition == 0) {
+                    DisplayFunctions.shortToast(getActivity(), "You are at the first track.");
+                    return;
+                }
+                mCurrentTrackPosition--;
+                mCurrentTrack = mTracks.get(mCurrentTrackPosition);
+                setViewToCurrentTrack();
+                playCurrentTrack();
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        releaseMediaPlayer();
+        mMediaPlayer = new MediaPlayer();
+        // We will only be streaming music.
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mMediaPlayer.setOnPreparedListener(this);
         setViewToCurrentTrack();
         // Let's go ahead and play the selected track for the user! That's what they want, anyhow.
         playCurrentTrack();
-        super.onStart();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        releaseMediaPlayer();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        releaseMediaPlayer();
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        mMediaPlayer.start();
     }
 
     private void setViewToCurrentTrack() {
@@ -153,24 +231,33 @@ public class PlayerActivityFragment extends Fragment {
 
     private void playCurrentTrack() {
         // Don't do anything if there's no network.
-        if (!Network.isNetworkAvailable(getActivity())) {
-            Display.shortToast(getActivity(), "No network available!");
+        if (!NetworkFunctions.isNetworkAvailable(getActivity())) {
+            DisplayFunctions.shortToast(getActivity(), "No network available!");
             return;
         }
-
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.stop();
-            mMediaPlayer.reset();
-        }
-
+        stopMediaPlayer();
         long startTime = System.currentTimeMillis();
         try {
             mMediaPlayer.setDataSource(mCurrentTrack.getPreviewUrl());
-            mMediaPlayer.prepare();
-            mMediaPlayer.start();
+            mMediaPlayer.prepareAsync();
         } catch (IOException ie) {
             Log.e(LOG_TAG, "ERROR", ie);
         }
         Log.v(LOG_TAG, "all functions took " + (System.currentTimeMillis() - startTime) + "!");
+    }
+
+    private void releaseMediaPlayer() {
+        if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+            mMediaPlayer.release();
+        }
+    }
+
+    private void stopMediaPlayer() {
+        if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+        }
     }
 }

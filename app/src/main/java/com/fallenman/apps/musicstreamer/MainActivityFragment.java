@@ -15,8 +15,8 @@ import android.widget.SearchView;
 
 import com.fallenman.apps.musicstreamer.adapter.MusicAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
-import com.fallenman.apps.musicstreamer.utilities.Display;
-import com.fallenman.apps.musicstreamer.utilities.Network;
+import com.fallenman.apps.musicstreamer.utilities.DisplayFunctions;
+import com.fallenman.apps.musicstreamer.utilities.NetworkFunctions;
 import com.fallenman.apps.musicstreamer.vo.EntityVo;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
 
@@ -75,8 +75,8 @@ public class MainActivityFragment extends Fragment {
         @Override
         public boolean onQueryTextSubmit(String query) {
             // Don't do anything if there's no network.
-            if( ! Network.isNetworkAvailable(getActivity())) {
-                Display.shortToast(getActivity(), "No network available!");
+            if( ! NetworkFunctions.isNetworkAvailable(getActivity())) {
+                DisplayFunctions.shortToast(getActivity(), "No network available!");
                 return false;
             }
             // Use input method manager to close the keyboard on enter.
@@ -122,7 +122,7 @@ public class MainActivityFragment extends Fragment {
             musicAdapter.clear();
             // Display toast if no data returned.
             if(entityVoList == null || entityVoList.isEmpty()) {
-                Display.shortToast(getActivity(), "No data found!");
+                DisplayFunctions.shortToast(getActivity(), "No data found!");
             }
             else // we have data!
             {
