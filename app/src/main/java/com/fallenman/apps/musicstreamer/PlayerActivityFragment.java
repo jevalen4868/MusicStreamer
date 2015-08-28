@@ -2,9 +2,9 @@ package com.fallenman.apps.musicstreamer;
 
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,7 +35,7 @@ import java.util.List;
  * Some snippets from
  * http://stackoverflow.com/questions/22438861/showing-error-while-trying-to-run-mediaplayer-in-asynctask
  */
-public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
     private static final String LOG_TAG = PlayerActivityFragment.class.getSimpleName();
     private MediaPlayer mMediaPlayer;
     // All variables regarding current track playing.
@@ -57,6 +57,7 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
     private TrackVo mCurrentTrack;
     private int mCurrentTrackPosition;
     private int mCurrentTrackDuration;
+    private boolean mPaused = false;
 
     public PlayerActivityFragment() {
     }
@@ -107,28 +108,31 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
     @Override
     public void onStart() {
         super.onStart();
+        resetMediaPlayer();
+        mediaPlayerInit();
+        prepareCurrentTrack();
         // Let's setup listeners for our play,pause,next,previous buttons.
         mPlayPauseTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mMediaPlayer.isPlaying()) {
-                    mPlayPauseTrack.setImageDrawable(null);
+                if (mMediaPlayer.isPlaying()) {
                     mPlayPauseTrack.setImageDrawable(
                             CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_play, getResources())
                     );
                     mMediaPlayer.pause();
+                    mPaused = true;
                     mCurrentTrackDuration = mMediaPlayer.getCurrentPosition();
-                }
-                else {
+                } else { // Stopped, resume playback or begin new track.
                     mPlayPauseTrack.setImageDrawable(
                             CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources())
                     );
-                    if(mCurrentTrackDuration > 0) {
+                    mPaused = false;
+                    if (mCurrentTrackDuration > 0) {
                         mMediaPlayer.seekTo(mCurrentTrackDuration);
                         mMediaPlayer.start();
                     } else // new track selected, as we reset track duration when a new track is selected
                     {
-                        playCurrentTrack();
+                        prepareCurrentTrack();
                     }
                 }
             }
@@ -137,41 +141,38 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
             @Override
             public void onClick(View v) {
                 // Make sure we are not at the last track in the list.
-                if(mCurrentTrackPosition == (mTracks.size() - 1)) {
+                if (mCurrentTrackPosition == (mTracks.size() - 1)) {
                     DisplayFunctions.shortToast(getActivity(), "You are at the last track.");
                     return;
                 }
                 mCurrentTrackPosition++;
                 mCurrentTrack = mTracks.get(mCurrentTrackPosition);
                 setViewToCurrentTrack();
-                // Only play the track if the user is already playing music.
-                if(mMediaPlayer.isPlaying()) {
-                    playCurrentTrack();
-                } else // Not playing, reset the player.
-                {
-                    resetMediaPlayer();
-                }
+                prepareCurrentTrack();
             }
         });
         mPreviousTrack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Make sure we are not at the last track in the list.
-                if(mCurrentTrackPosition == 0) {
+                if (mCurrentTrackPosition == 0) {
                     DisplayFunctions.shortToast(getActivity(), "You are at the first track.");
                     return;
                 }
                 mCurrentTrackPosition--;
                 mCurrentTrack = mTracks.get(mCurrentTrackPosition);
                 setViewToCurrentTrack();
-                playCurrentTrack();
+                // Only play the track if the user is already playing music.
+                prepareCurrentTrack();
             }
         });
         // Now for the seek bar.
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                
+                if (mMediaPlayer != null && fromUser) {
+                    mMediaPlayer.seekTo(progress * 1000);
+                }
             }
 
             @Override
@@ -181,7 +182,19 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
+                int selectedDuration = seekBar.getProgress();
+                // If the user didn't select a new position, return.
+                if (selectedDuration == mCurrentTrackDuration) {
+                    return;
+                }
+                // Set this so that when playing is resumed, it'll seek to the right place.
+                mCurrentTrackDuration = selectedDuration * 1000;
+                // If playing.
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.pause();
+                    mMediaPlayer.seekTo(mCurrentTrackDuration);
+                    mMediaPlayer.start();
+                }
             }
         });
     }
@@ -190,13 +203,8 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
     public void onResume() {
         super.onResume();
         releaseMediaPlayer();
-        mMediaPlayer = new MediaPlayer();
-        // We will only be streaming music.
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mMediaPlayer.setOnPreparedListener(this);
+        mediaPlayerInit();
         setViewToCurrentTrack();
-        // Let's go ahead and play the selected track for the user! That's what they want, anyhow.
-        playCurrentTrack();
     }
 
     @Override
@@ -219,8 +227,26 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        if(mMediaPlayer != null) {
-            mMediaPlayer.start();
+        if (mMediaPlayer != null) {
+            mSeekBar.setEnabled(true);
+            mPlayPauseTrack.setEnabled(true);
+            // Only start if we are just entering the app, or if we are not paused.
+            if(! mPaused) {
+                mMediaPlayer.start();
+                // make sure we are always at the pause button when track starts.
+                mPlayPauseTrack.setImageDrawable(
+                        CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources()));
+            }
+        }
+    }
+
+    private void mediaPlayerInit() {
+        if(mMediaPlayer == null) {
+            mMediaPlayer = new MediaPlayer();
+            // We will only be streaming music.
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mMediaPlayer.setOnPreparedListener(this);
+            mMediaPlayer.setOnCompletionListener(this);
         }
     }
 
@@ -230,10 +256,15 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
         mTrackName.setText(mCurrentTrack.getTrackName());
         mCurrentTrackDuration = 0;
         mTrackMax.setText("00:30");
+        mSeekBar.setProgress(0);
+        mSeekBar.setMax(30);
         // Call update image code.
         Picasso.with(getActivity())
                 .load(mCurrentTrack.getImageUrl())
                 .into(mAlbumArt);
+        // Disable some features until the track is prepared.
+        mSeekBar.setEnabled(false);
+        mPlayPauseTrack.setEnabled(false);
     }
 
     /**
@@ -271,13 +302,26 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
 
     }
 
-    private void playCurrentTrack() {
+    private void prepareCurrentTrack() {
+        Log.v(LOG_TAG, "Preparing...");
         // Don't do anything if there's no network.
         if (!NetworkFunctions.isNetworkAvailable(getActivity())) {
             DisplayFunctions.shortToast(getActivity(), "No network available!");
             return;
         }
         resetMediaPlayer();
+        final Handler mHandler = new Handler();
+        //Make sure you update Seekbar on UI thread
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mMediaPlayer != null) {
+                    int mCurrentPosition = mMediaPlayer.getCurrentPosition() / 1000;
+                    mSeekBar.setProgress(mCurrentPosition);
+                }
+                mHandler.postDelayed(this, 1000);
+            }
+        });
         try {
             mMediaPlayer.setDataSource(mCurrentTrack.getPreviewUrl());
             mMediaPlayer.prepareAsync();
@@ -291,6 +335,9 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
             mMediaPlayer.stop();
             mMediaPlayer.reset();
             mMediaPlayer.release();
+            if (mMediaPlayer != null) {
+                mMediaPlayer.release();
+            }
         }
     }
 
@@ -304,10 +351,10 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
     }
 
     @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        if(mMediaPlayer != null) {
-            mMediaPlayer.reset();
-        }
-        return false;
+    public void onCompletion(MediaPlayer mp) {
+        Log.v(LOG_TAG, "onCompletion");
+        mPlayPauseTrack.setImageDrawable(
+                CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_play, getResources())
+        );
     }
 }

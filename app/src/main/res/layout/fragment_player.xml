@@ -26,13 +26,13 @@
                 android:id="@+id/entity_names_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Entities" />
+                />
 
             <TextView
                 android:id="@+id/album_name_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="album name" />
+                />
 
             <com.fallenman.apps.musicstreamer.ResizableImageView
                 android:id="@+id/album_art_imageView"
@@ -44,7 +44,7 @@
                 android:id="@+id/track_name_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="album name" />
+                />
 
         </LinearLayout>
 
