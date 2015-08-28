@@ -16,4 +16,6 @@ public class DisplayFunctions {
         Toast noDataToast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         noDataToast.show();
     }
+
+
 }
