@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 public class PlayerActivity extends AppCompatActivity {
 
@@ -15,6 +14,18 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+
+        if (savedInstanceState == null) {
+            // Create the detail fragment using a transaction.
+            Bundle args = getIntent().getExtras();
+
+            PlayerActivityFragment paf = new PlayerActivityFragment();
+            paf.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.activity_player_container, paf)
+                    .commit();
+        }
     }
 
 

@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,9 +36,9 @@ import java.util.List;
  * Some snippets from
  * http://stackoverflow.com/questions/22438861/showing-error-while-trying-to-run-mediaplayer-in-asynctask
  */
-public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class PlayerActivityFragment extends DialogFragment implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
     private static final String LOG_TAG = PlayerActivityFragment.class.getSimpleName();
-    private MediaPlayer mMediaPlayer;
+    private static MediaPlayer mMediaPlayer;
     // All variables regarding current track playing.
     private ScrollView mScrollView;
     private String mEntityId;
@@ -80,8 +81,8 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_player, container, false);
 
+        View rootView = inflater.inflate(R.layout.fragment_player, container, false);
         mScrollView = (ScrollView) rootView.findViewById(R.id.player_fragment_scrollView);
         // Now do all the background noise...
         mEntityNames = (TextView) rootView.findViewById(R.id.entity_names_textView);
@@ -94,23 +95,37 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
         mPlayPauseTrack = (ImageButton) rootView.findViewById(R.id.play_pause_imageButton);
         mPlayPauseTrack.setImageResource(android.R.drawable.ic_media_pause);
         mNextTrack = (ImageButton) rootView.findViewById(R.id.next_imageButton);
-        // Grab calling intent, so we can take it's data! Muahahaha!
-        Intent intent = getActivity().getIntent();
-        // check if intent has the data we are expecting.
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-            String playerJsonStr = intent.getStringExtra(Intent.EXTRA_TEXT);
-            Log.v(LOG_TAG, playerJsonStr);
-            setTracks(playerJsonStr);
+
+        // Now grab arguments from calling intent.
+        String playerJsonStr = "";
+        Bundle args = getArguments(); // We were started as a dialog.
+        if (args != null) {
+            playerJsonStr = args.getString(PlayerJson.PLAYER_JSON_BUNDLE_ID);
         }
+        Log.v(LOG_TAG, playerJsonStr);
+        setTracks(playerJsonStr);
+
         return rootView;
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        resetMediaPlayer();
         mediaPlayerInit();
         prepareCurrentTrack();
+        setViewToCurrentTrack();
+        //Make sure you update Seekbar on UI thread
+        final Handler mHandler = new Handler();
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mMediaPlayer != null) {
+                    mCurrentTrackDuration = mMediaPlayer.getCurrentPosition();
+                    mSeekBar.setProgress(mCurrentTrackDuration / 1000);
+                }
+                mHandler.postDelayed(this, 1000);
+            }
+        });
         // Let's setup listeners for our play,pause,next,previous buttons.
         mPlayPauseTrack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,12 +136,15 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
                     );
                     mMediaPlayer.pause();
                     mPaused = true;
+                    Log.v("LOG_TAG", "Paused at " + mCurrentTrackDuration);
                     mCurrentTrackDuration = mMediaPlayer.getCurrentPosition();
                 } else { // Stopped, resume playback or begin new track.
                     mPlayPauseTrack.setImageDrawable(
                             CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources())
                     );
                     mPaused = false;
+                    Log.v("LOG_TAG", "Resumed at " + mCurrentTrackDuration);
+                    // handle if user seeked while paused.
                     if (mCurrentTrackDuration > 0) {
                         mMediaPlayer.seekTo(mCurrentTrackDuration);
                         mMediaPlayer.start();
@@ -200,43 +218,38 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        releaseMediaPlayer();
-        mediaPlayerInit();
-        setViewToCurrentTrack();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        releaseMediaPlayer();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        try {
-            releaseMediaPlayer();
-            mMediaPlayer = null;
-        } catch( IllegalStateException ise) {
-            Log.e(LOG_TAG, "ERROR", ise);
-            mMediaPlayer = null;
+    public void onDestroy() {
+        super.onDestroy();
+        // If paused go ahead and release the activity.
+        if( mPaused ) {
+            try {
+                mTracks = null;
+                releaseMediaPlayer();
+                mMediaPlayer = null;
+            } catch (IllegalStateException ise) {
+                Log.e(LOG_TAG, "ERROR", ise);
+                mMediaPlayer = null;
+            }
         }
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        if (mMediaPlayer != null) {
-            mSeekBar.setEnabled(true);
-            mPlayPauseTrack.setEnabled(true);
+        Log.v(LOG_TAG, "Prepared!" + mMediaPlayer + getActivity());
+        if (mp != null) {
             // Only start if we are just entering the app, or if we are not paused.
             if(! mPaused) {
                 mMediaPlayer.start();
-                // make sure we are always at the pause button when track starts.
-                mPlayPauseTrack.setImageDrawable(
-                        CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources()));
             }
+        }
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        Log.v(LOG_TAG, "onCompletion");
+        // If the current track is done.
+        if( ! mPaused ) {
+            mNextTrack.performClick();
         }
     }
 
@@ -262,9 +275,6 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
         Picasso.with(getActivity())
                 .load(mCurrentTrack.getImageUrl())
                 .into(mAlbumArt);
-        // Disable some features until the track is prepared.
-        mSeekBar.setEnabled(false);
-        mPlayPauseTrack.setEnabled(false);
     }
 
     /**
@@ -310,19 +320,12 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
             return;
         }
         resetMediaPlayer();
-        final Handler mHandler = new Handler();
-        //Make sure you update Seekbar on UI thread
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mMediaPlayer != null) {
-                    int mCurrentPosition = mMediaPlayer.getCurrentPosition() / 1000;
-                    mSeekBar.setProgress(mCurrentPosition);
-                }
-                mHandler.postDelayed(this, 1000);
-            }
-        });
         try {
+            // make sure we are always at the pause button when track starts, if not paused.
+            if( ! mPaused ) {
+                mPlayPauseTrack.setImageDrawable(
+                        CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_pause, getResources()));
+            }
             mMediaPlayer.setDataSource(mCurrentTrack.getPreviewUrl());
             mMediaPlayer.prepareAsync();
         } catch (IOException ie) {
@@ -348,13 +351,5 @@ public class PlayerActivityFragment extends Fragment implements MediaPlayer.OnPr
         } else if (mMediaPlayer != null) {
             mMediaPlayer.reset();
         }
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        Log.v(LOG_TAG, "onCompletion");
-        mPlayPauseTrack.setImageDrawable(
-                CompatibilityImageFunctions.getDrawable(getActivity(), android.R.drawable.ic_media_play, getResources())
-        );
     }
 }

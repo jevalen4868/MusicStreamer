@@ -12,6 +12,24 @@ public class TrackVo {
     private String previewUrl;
     private long duration;
 
+//    // Make sure to add any new values here.
+//    @Override
+//    public boolean equals(Object o) {
+//        TrackVo tVo = (TrackVo)o;
+//        // compare each field for equality.
+//        if( entityNames.contentEquals(tVo.entityNames)
+//                && trackName.contentEquals(tVo.trackName)
+//                && albumName.contentEquals(tVo.albumName)
+//                && imageUrl.contentEquals(tVo.imageUrl)
+//                && previewUrl.contentEquals(tVo.previewUrl)
+//                && duration == tVo.duration)
+//        {
+//            return true;
+//        }
+//        // Not a match!
+//        return false;
+//    }
+
     public String getEntityNames() {
         return entityNames;
     }

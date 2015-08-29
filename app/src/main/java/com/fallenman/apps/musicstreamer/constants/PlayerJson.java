@@ -5,6 +5,7 @@ package com.fallenman.apps.musicstreamer.constants;
  */
 public class PlayerJson {
     // Player json keys, FOR USE ONLY WITH JSON TO/FROM THE PLAYER.
+    public static final String PLAYER_JSON_BUNDLE_ID = "playerJsonBundleId";
     public static final String ENTITY_ID = "entityId";
     public static final String TRACKS = "tracks";
     public static final String ENTITY_NAMES = "entityNames";

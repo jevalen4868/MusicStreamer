@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +16,7 @@ import android.widget.Toast;
 
 import com.fallenman.apps.musicstreamer.adapter.TrackAdapter;
 import com.fallenman.apps.musicstreamer.connector.MusicConnector;
+import com.fallenman.apps.musicstreamer.constants.Main;
 import com.fallenman.apps.musicstreamer.constants.PlayerJson;
 import com.fallenman.apps.musicstreamer.factory.MusicFactory;
 import com.fallenman.apps.musicstreamer.utilities.DisplayFunctions;
@@ -36,20 +39,19 @@ public class TopTracksActivityFragment extends Fragment {
     private static final String LOG_TAG = TopTracksActivityFragment.class.getSimpleName();
     private TrackAdapter mTrackAdapter;
     private String mEntityId;
-
     public TopTracksActivityFragment() {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
-        // Grab calling intent, so we can take it's data! Muahahaha!
-        Intent intent = getActivity().getIntent();
-        // check if intent has the data we are expecting.
-        if(intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-            this.mEntityId = intent.getStringExtra(Intent.EXTRA_TEXT);
+        // Now grab arguments from calling intent.
+        Bundle args = getArguments(); // We were started as a dialog.
+        if (args != null) {
+            this.mEntityId = args.getString(Main.ENTITY_ID);
         }
+
+        View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
         // Now initialize track adapter.
         mTrackAdapter = new TrackAdapter(getActivity(), R.layout.track_layout, new ArrayList<TrackVo>(10));
         // Get the forecast list view to set forecast array adapter on.
@@ -120,7 +122,7 @@ public class TopTracksActivityFragment extends Fragment {
             try {
                 allTopTracksForEntityJson.put(PlayerJson.ENTITY_ID, mEntityId);
                 allTopTracksForEntityJson.put(PlayerJson.TRACKS, allTracksArray);
-                for(currentPosition = 0; currentPosition < adapterView.getCount(); currentPosition++) {
+                for (currentPosition = 0; currentPosition < adapterView.getCount(); currentPosition++) {
                     // We need to grab all the tracks for playback.
                     // Set the selected flag to true if position matches passed in position.
                     boolean selected = false;
@@ -139,15 +141,24 @@ public class TopTracksActivityFragment extends Fragment {
                     currentTrack.put(PlayerJson.SELECTED, selected);
                     allTracksArray.put(currentTrack);
                 }
-            } catch( JSONException je) {
+            } catch (JSONException je) {
                 Log.e(LOG_TAG, "ERROR", je);
             }
-            // Executed in an Activity, so 'getActivity' is the Context
-            Intent playerIntent = new Intent(getActivity(), PlayerActivity.class);
-            // Stick some "extra text" on it. The json string to populate and play in the player.
-            playerIntent.putExtra(Intent.EXTRA_TEXT, allTopTracksForEntityJson.toString());
-            // Start the intent.
-            getActivity().startActivity(playerIntent);
+
+            // Call parent activity wis de data.
+            ((Callback)getActivity()).onItemSelected(allTopTracksForEntityJson.toString());
+
         }
+    }
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(String json);
     }
 }

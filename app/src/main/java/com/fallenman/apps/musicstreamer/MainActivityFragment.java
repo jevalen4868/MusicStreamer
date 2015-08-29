@@ -63,12 +63,7 @@ public class MainActivityFragment extends Fragment {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id) {
             EntityVo eVo = musicAdapter.getItem(pos);
-            // Executed in an Activity, so 'getActivity' is the Context
-            Intent detailIntent = new Intent(getActivity(), TopTracksActivity.class);
-            // Stick some "extra text" on it. The id of the artist.
-            detailIntent.putExtra(Intent.EXTRA_TEXT, eVo.getId());
-            // Start the intent.
-            getActivity().startActivity(detailIntent);
+            ((Callback) getActivity()).onItemSelected(eVo.getId());
         }
     }
     public class EntityNameListener implements SearchView.OnQueryTextListener {
@@ -131,5 +126,17 @@ public class MainActivityFragment extends Fragment {
                 }
             }
         }
+    }
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(String json);
     }
 }
