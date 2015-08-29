@@ -16,7 +16,6 @@ import com.fallenman.apps.musicstreamer.constants.PlayerJson;
 
 public class TopTracksActivity extends ActionBarActivity implements TopTracksActivityFragment.Callback{
     private static final String LOG_TAG = TopTracksActivity.class.getSimpleName();
-    private boolean mIsLargeLayout = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,23 +70,13 @@ public class TopTracksActivity extends ActionBarActivity implements TopTracksAct
     }
 
     @Override
-    public void onItemSelected(String json) {
+    public void onTrackSelected(String json) {
         //Prepare data.
         Bundle data = new Bundle();
         data.putString(PlayerJson.PLAYER_JSON_BUNDLE_ID, json);
-        Log.d(LOG_TAG, String.valueOf(mIsLargeLayout));
-        if (mIsLargeLayout) {
 
-            // Begin fragment processing.
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            PlayerActivityFragment playerActivityFragment = new PlayerActivityFragment();
-            playerActivityFragment.setArguments(data);
-            // The device is using a large layout, so show the fragment as a dialog
-            playerActivityFragment.show(fragmentManager, "dialog");
-        } else {
-            Intent intent = new Intent(this, PlayerActivity.class);
-            intent.putExtras(data);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(this, PlayerActivity.class);
+        intent.putExtras(data);
+        startActivity(intent);
     }
 }

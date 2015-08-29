@@ -1,16 +1,20 @@
 package com.fallenman.apps.musicstreamer;
 
+import android.app.ActionBar;
+import android.app.Dialog;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -106,6 +110,15 @@ public class PlayerActivityFragment extends DialogFragment implements MediaPlaye
         setTracks(playerJsonStr);
 
         return rootView;
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+        return dialog;
     }
 
     @Override

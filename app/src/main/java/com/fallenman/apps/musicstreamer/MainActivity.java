@@ -14,7 +14,7 @@ import com.fallenman.apps.musicstreamer.constants.Main;
 import com.fallenman.apps.musicstreamer.constants.PlayerJson;
 
 
-public class MainActivity extends ActionBarActivity implements MainActivityFragment.Callback {
+public class MainActivity extends ActionBarActivity implements MainActivityFragment.Callback, TopTracksActivityFragment.Callback {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String TOP_TRACKS_FRAGMENT_TAG = "TOP_TRACKS_FRAGMENT_TAG";
     private boolean mIsLargeLayout = false;
@@ -58,22 +58,13 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
         return super.onOptionsItemSelected(item);
     }
 
-    @Override @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public Intent getParentActivityIntent() {
-        // add the clear top flag - which checks if the parent (main)
-        // activity is already running and avoids recreating it
-        return super.getParentActivityIntent()
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    }
-
     @Override
-    public void onItemSelected(String entityId) {
+    public void onArtistSelected(String entityId) {
         //Prepare data.
         Bundle data = new Bundle();
         data.putString(Main.ENTITY_ID, entityId);
         Log.d(LOG_TAG, String.valueOf(mIsLargeLayout));
         if (mIsLargeLayout) {
-
             // Begin fragment processing.
             TopTracksActivityFragment topTracksActivityFragment = new TopTracksActivityFragment();
             topTracksActivityFragment.setArguments(data);
@@ -87,5 +78,17 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
             intent.putExtras(data);
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onTrackSelected(String allTracks) {
+        //Prepare data.
+        Bundle data = new Bundle();
+        data.putString(PlayerJson.PLAYER_JSON_BUNDLE_ID, allTracks);// Begin fragment processing.
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        PlayerActivityFragment playerActivityFragment = new PlayerActivityFragment();
+        playerActivityFragment.setArguments(data);
+        // The device is using a large layout, so show the fragment as a dialog
+        playerActivityFragment.show(fragmentManager, "dialog");
     }
 }

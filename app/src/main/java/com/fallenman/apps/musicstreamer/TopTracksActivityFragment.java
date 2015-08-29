@@ -146,8 +146,12 @@ public class TopTracksActivityFragment extends Fragment {
             }
 
             // Call parent activity wis de data.
-            ((Callback)getActivity()).onItemSelected(allTopTracksForEntityJson.toString());
-
+            if(getActivity() instanceof TopTracksActivity) {
+                ((Callback)(TopTracksActivity)getActivity()).onTrackSelected(allTopTracksForEntityJson.toString());
+            }
+            if(getActivity() instanceof MainActivity) {
+                ((Callback)(MainActivity)getActivity()).onTrackSelected(allTopTracksForEntityJson.toString());
+            }
         }
     }
     /**
@@ -159,6 +163,6 @@ public class TopTracksActivityFragment extends Fragment {
         /**
          * DetailFragmentCallback for when an item has been selected.
          */
-        void onItemSelected(String json);
+        void onTrackSelected(String allTracks);
     }
 }

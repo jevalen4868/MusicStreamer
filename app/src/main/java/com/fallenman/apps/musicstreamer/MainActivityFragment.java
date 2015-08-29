@@ -1,7 +1,6 @@
 package com.fallenman.apps.musicstreamer;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -63,7 +62,7 @@ public class MainActivityFragment extends Fragment {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id) {
             EntityVo eVo = musicAdapter.getItem(pos);
-            ((Callback) getActivity()).onItemSelected(eVo.getId());
+            ((Callback) getActivity()).onArtistSelected(eVo.getId());
         }
     }
     public class EntityNameListener implements SearchView.OnQueryTextListener {
@@ -137,6 +136,6 @@ public class MainActivityFragment extends Fragment {
         /**
          * DetailFragmentCallback for when an item has been selected.
          */
-        void onItemSelected(String json);
+        void onArtistSelected(String json);
     }
 }
