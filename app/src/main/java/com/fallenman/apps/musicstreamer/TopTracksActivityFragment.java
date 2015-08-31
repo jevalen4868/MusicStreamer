@@ -45,27 +45,23 @@ public class TopTracksActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Now grab arguments from calling intent.
-        Bundle args = getArguments(); // We were started as a dialog.
-        if (args != null) {
-            this.mEntityId = args.getString(Main.ENTITY_ID);
-        }
-
         View rootView = inflater.inflate(R.layout.fragment_top_tracks, container, false);
         // Now initialize track adapter.
-        mTrackAdapter = new TrackAdapter(getActivity(), R.layout.track_layout, new ArrayList<TrackVo>(10));
-        // Get the forecast list view to set forecast array adapter on.
-        ListView trackListView = (ListView)rootView.findViewById(R.id.listView_trackData);
-        trackListView.setAdapter(mTrackAdapter);
-        trackListView.setOnItemClickListener(new TrackDataOnClickListener());
+        if(savedInstanceState == null) {
+            // Now grab arguments from calling intent.
+            Bundle args = getArguments(); // We were started as a dialog.
+            if (args != null) {
+                this.mEntityId = args.getString(Main.ENTITY_ID);
+            }
+            mTrackAdapter = new TrackAdapter(getActivity(), R.layout.track_layout, new ArrayList<TrackVo>(10));
+            // Get the forecast list view to set forecast array adapter on.
+            ListView trackListView = (ListView) rootView.findViewById(R.id.listView_trackData);
+            trackListView.setAdapter(mTrackAdapter);
+            trackListView.setOnItemClickListener(new TrackDataOnClickListener());
+            (new FetchTrackDataTask()).execute(this.mEntityId);
+        }
         // Voila!!!
         return rootView;
-    }
-
-    @Override
-    public void onStart() {
-        (new FetchTrackDataTask()).execute(this.mEntityId);
-        super.onStart();
     }
 
     // PLEASE DEFINE SUB CLASSES BELOW THIS COMMENT.////////////////////////////////////////////////

@@ -101,14 +101,31 @@ public class PlayerActivityFragment extends DialogFragment implements MediaPlaye
         mNextTrack = (ImageButton) rootView.findViewById(R.id.next_imageButton);
 
         // Now grab arguments from calling intent.
-        String playerJsonStr = "";
-        Bundle args = getArguments(); // We were started as a dialog.
-        if (args != null) {
-            playerJsonStr = args.getString(PlayerJson.PLAYER_JSON_BUNDLE_ID);
-        }
-        Log.v(LOG_TAG, playerJsonStr);
-        setTracks(playerJsonStr);
+        if(savedInstanceState == null) {
+            String playerJsonStr = "";
+            Bundle args = getArguments(); // We were started as a dialog.
+            if (args != null) {
+                playerJsonStr = args.getString(PlayerJson.PLAYER_JSON_BUNDLE_ID);
+            }
+            Log.v(LOG_TAG, playerJsonStr);
+            setTracks(playerJsonStr);
 
+            mediaPlayerInit();
+            prepareCurrentTrack();
+            setViewToCurrentTrack();
+            //Make sure you update Seekbar on UI thread
+            final Handler mHandler = new Handler();
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mMediaPlayer != null) {
+                        mCurrentTrackDuration = mMediaPlayer.getCurrentPosition();
+                        mSeekBar.setProgress(mCurrentTrackDuration / 1000);
+                    }
+                    mHandler.postDelayed(this, 1000);
+                }
+            });
+        }
         return rootView;
     }
 
@@ -123,22 +140,8 @@ public class PlayerActivityFragment extends DialogFragment implements MediaPlaye
 
     @Override
     public void onStart() {
+        Log.v(LOG_TAG, "onStart()");
         super.onStart();
-        mediaPlayerInit();
-        prepareCurrentTrack();
-        setViewToCurrentTrack();
-        //Make sure you update Seekbar on UI thread
-        final Handler mHandler = new Handler();
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mMediaPlayer != null) {
-                    mCurrentTrackDuration = mMediaPlayer.getCurrentPosition();
-                    mSeekBar.setProgress(mCurrentTrackDuration / 1000);
-                }
-                mHandler.postDelayed(this, 1000);
-            }
-        });
         // Let's setup listeners for our play,pause,next,previous buttons.
         mPlayPauseTrack.setOnClickListener(new View.OnClickListener() {
             @Override
