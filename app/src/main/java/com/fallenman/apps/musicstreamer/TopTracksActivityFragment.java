@@ -58,7 +58,9 @@ public class TopTracksActivityFragment extends Fragment {
             ListView trackListView = (ListView) rootView.findViewById(R.id.listView_trackData);
             trackListView.setAdapter(mTrackAdapter);
             trackListView.setOnItemClickListener(new TrackDataOnClickListener());
-            (new FetchTrackDataTask()).execute(this.mEntityId);
+            if(mEntityId != null && !mEntityId.contentEquals("")) {
+                (new FetchTrackDataTask()).execute(this.mEntityId);
+            }
         }
         // Voila!!!
         return rootView;

@@ -45,20 +45,17 @@ public class MusicAdapter extends ArrayAdapter<EntityVo> {
         // Set data to our views!
         EntityVo eVo = getItem(position);
         if(eVo != null) {
-            evh.entityId = eVo.getId();
             evh.entityName.setText(eVo.getEntityName());
             // Now attempt to fetch the image via Picasso.
             String imageUrl = eVo.getEntityImageUrl();
             Picasso.with(getContext())
                     .load(imageUrl)
-                    .resize(100, 100)
                     .into(evh.entityImage);
         }
         return rowView;
     }
 
     protected static class EntityViewHolder {
-        String entityId;
         TextView entityName;
         ImageView entityImage;
     }
