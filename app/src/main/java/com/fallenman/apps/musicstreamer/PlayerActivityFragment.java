@@ -248,20 +248,15 @@ public class PlayerActivityFragment extends DialogFragment implements MediaPlaye
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        Log.v(LOG_TAG, "Prepared!" + mMediaPlayer + getActivity());
-        if (mp != null) {
-            // Only start if we are just entering the app, or if we are not paused.
-            if(! mPaused) {
-                mMediaPlayer.start();
-            }
+        if (mp != null && ! mPaused) {
+            mMediaPlayer.start();
         }
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        Log.v(LOG_TAG, "onCompletion");
         // If the current track is done.
-        if( ! mPaused ) {
+        if( ! mPaused  && mNextTrack != null) {
             mNextTrack.performClick();
         }
     }
@@ -326,7 +321,10 @@ public class PlayerActivityFragment extends DialogFragment implements MediaPlaye
     }
 
     private void prepareCurrentTrack() {
-        Log.v(LOG_TAG, "Preparing...");
+        // Our activity could be null here, let's check.
+        if(getActivity() == null) {
+            return;
+        }
         // Don't do anything if there's no network.
         if (!NetworkFunctions.isNetworkAvailable(getActivity())) {
             DisplayFunctions.shortToast(getActivity(), "No network available!");
