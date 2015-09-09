@@ -81,6 +81,9 @@ public class TopTracksActivityFragment extends Fragment {
                 // Nothing to do.
                 return null;
             }
+            if(getActivity() == null) {
+                return null;
+            }
             // Don't do anything if there's no network.
             if( ! NetworkFunctions.isNetworkAvailable(getActivity())) {
                 DisplayFunctions.shortToast(getActivity(), "No network available!");
@@ -100,6 +103,9 @@ public class TopTracksActivityFragment extends Fragment {
         protected void onPostExecute(List<TrackVo> trackVoList) {
             super.onPostExecute(trackVoList);
             mTrackAdapter.clear();
+            if(getActivity() == null) {
+                return;
+            }
             if ( trackVoList == null || trackVoList.isEmpty()) {
                 Toast noDataToast = Toast.makeText(getActivity(), "No data found!", Toast.LENGTH_SHORT);
                 noDataToast.show();

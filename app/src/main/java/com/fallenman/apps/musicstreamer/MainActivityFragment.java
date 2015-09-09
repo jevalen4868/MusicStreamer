@@ -114,6 +114,9 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(List<EntityVo> entityVoList) {
             super.onPostExecute(entityVoList);
             musicAdapter.clear();
+            if(getActivity() == null) {
+                return;
+            }
             // Display toast if no data returned.
             if(entityVoList == null || entityVoList.isEmpty()) {
                 DisplayFunctions.shortToast(getActivity(), "No data found!");
